@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { Test, TestingModule } from "@nestjs/testing";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Entity, PrimaryGeneratedColumn, Column, DataSource } from "typeorm";
@@ -35,7 +35,10 @@ describe("SluggableService", () => {
           synchronize: true,
         }),
       ],
-      providers: [{ provide: SLUGGABLE_OPTIONS, useValue: {} }, SluggableService],
+      providers: [
+        { provide: SLUGGABLE_OPTIONS, useValue: {} },
+        SluggableService,
+      ],
     }).compile();
 
     await module.init();
@@ -61,7 +64,9 @@ describe("SluggableService", () => {
     });
 
     it("should handle special characters", () => {
-      expect(service.generateSlug("What's New? #Release!")).toBe("what-s-new-release");
+      expect(service.generateSlug("What's New? #Release!")).toBe(
+        "what-s-new-release",
+      );
     });
 
     it("should transliterate by default", () => {
@@ -69,11 +74,15 @@ describe("SluggableService", () => {
     });
 
     it("should respect separator override", () => {
-      expect(service.generateSlug("Hello World", { separator: "_" })).toBe("hello_world");
+      expect(service.generateSlug("Hello World", { separator: "_" })).toBe(
+        "hello_world",
+      );
     });
 
     it("should respect maxLength override", () => {
-      const slug = service.generateSlug("This is a very long title", { maxLength: 10 });
+      const slug = service.generateSlug("This is a very long title", {
+        maxLength: 10,
+      });
       expect(slug.length).toBeLessThanOrEqual(10);
     });
 
@@ -85,32 +94,57 @@ describe("SluggableService", () => {
 
   describe("generateUniqueSlug()", () => {
     it("should return base slug when no collision", async () => {
-      const slug = await service.generateUniqueSlug(Post, "slug", "hello-world");
+      const slug = await service.generateUniqueSlug(
+        Post,
+        "slug",
+        "hello-world",
+      );
       expect(slug).toBe("hello-world");
     });
 
     it("should append suffix on collision", async () => {
       const repo = dataSource.getRepository(Post);
-      await repo.save(repo.create({ title: "Hello World", slug: "hello-world" }));
+      await repo.save(
+        repo.create({ title: "Hello World", slug: "hello-world" }),
+      );
 
-      const slug = await service.generateUniqueSlug(Post, "slug", "hello-world");
+      const slug = await service.generateUniqueSlug(
+        Post,
+        "slug",
+        "hello-world",
+      );
       expect(slug).toBe("hello-world-1");
     });
 
     it("should increment suffix for multiple collisions", async () => {
       const repo = dataSource.getRepository(Post);
-      await repo.save(repo.create({ title: "Hello World", slug: "hello-world" }));
-      await repo.save(repo.create({ title: "Hello World 2", slug: "hello-world-1" }));
+      await repo.save(
+        repo.create({ title: "Hello World", slug: "hello-world" }),
+      );
+      await repo.save(
+        repo.create({ title: "Hello World 2", slug: "hello-world-1" }),
+      );
 
-      const slug = await service.generateUniqueSlug(Post, "slug", "hello-world");
+      const slug = await service.generateUniqueSlug(
+        Post,
+        "slug",
+        "hello-world",
+      );
       expect(slug).toBe("hello-world-2");
     });
 
     it("should exclude entity by id", async () => {
       const repo = dataSource.getRepository(Post);
-      const post = await repo.save(repo.create({ title: "Hello World", slug: "hello-world" }));
+      const post = await repo.save(
+        repo.create({ title: "Hello World", slug: "hello-world" }),
+      );
 
-      const slug = await service.generateUniqueSlug(Post, "slug", "hello-world", post.id);
+      const slug = await service.generateUniqueSlug(
+        Post,
+        "slug",
+        "hello-world",
+        post.id,
+      );
       expect(slug).toBe("hello-world");
     });
   });
@@ -118,7 +152,9 @@ describe("SluggableService", () => {
   describe("findBySlug()", () => {
     it("should find entity by slug", async () => {
       const repo = dataSource.getRepository(Post);
-      await repo.save(repo.create({ title: "Hello World", slug: "hello-world" }));
+      await repo.save(
+        repo.create({ title: "Hello World", slug: "hello-world" }),
+      );
 
       const found = await service.findBySlug(Post, "slug", "hello-world");
       expect(found).not.toBeNull();
@@ -149,11 +185,18 @@ describe("SluggableService", () => {
       const repo = dataSource.getRepository(Post);
       // p1 has slug "test", p2 also has slug "test-1"
       await repo.save(repo.create({ title: "Test", slug: "test" }));
-      const p2 = await repo.save(repo.create({ title: "Test 2", slug: "test-1" }));
+      const p2 = await repo.save(
+        repo.create({ title: "Test 2", slug: "test-1" }),
+      );
 
       // Generating unique slug for "test" excluding p2 — "test" exists (not excluded), so collision logic runs
       // In collision query, p2 is excluded, so only "test" is found (no suffix match), maxSuffix=0
-      const slug = await service.generateUniqueSlug(Post, "slug", "test", p2.id);
+      const slug = await service.generateUniqueSlug(
+        Post,
+        "slug",
+        "test",
+        p2.id,
+      );
       expect(slug).toBe("test-1");
     });
 
@@ -168,7 +211,6 @@ describe("SluggableService", () => {
       const slug = await service.generateUniqueSlug(Post, "slug", "test");
       expect(slug).toBe("test-3");
     });
-
   });
 
   describe("generateSlug() with module-level options", () => {
@@ -258,7 +300,11 @@ describe("SluggableService", () => {
       const repo = ds.getRepository(Post);
       await repo.save(repo.create({ title: "Hello", slug: "hello" }));
 
-      const slug = await customService.generateUniqueSlug(Post, "slug", "hello");
+      const slug = await customService.generateUniqueSlug(
+        Post,
+        "slug",
+        "hello",
+      );
       expect(slug).toBe("hello_1");
     });
   });

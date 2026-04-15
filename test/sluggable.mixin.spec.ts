@@ -11,11 +11,13 @@ import { SluggableNotInitializedException } from "../src/exceptions/sluggable-no
 
 @Sluggable({ from: "title", slugField: "permalink" })
 @Entity("mixin_posts")
-class MixinPost extends SluggableMixin(class {
-  id!: string;
-  title!: string;
-  permalink!: string;
-}) {
+class MixinPost extends SluggableMixin(
+  class {
+    id!: string;
+    title!: string;
+    permalink!: string;
+  },
+) {
   @PrimaryGeneratedColumn("uuid")
   declare id: string;
 
@@ -27,10 +29,12 @@ class MixinPost extends SluggableMixin(class {
 }
 
 @Entity("mixin_plain")
-class MixinPlain extends SluggableMixin(class {
-  id!: string;
-  slug!: string;
-}) {
+class MixinPlain extends SluggableMixin(
+  class {
+    id!: string;
+    slug!: string;
+  },
+) {
   @PrimaryGeneratedColumn("uuid")
   declare id: string;
 
@@ -66,7 +70,10 @@ describe("SluggableMixin", () => {
   describe("getSlug()", () => {
     it("should return the slug value using custom slugField", async () => {
       const repo = dataSource.getRepository(MixinPost);
-      const post = repo.create({ title: "Hello World", permalink: "hello-world" });
+      const post = repo.create({
+        title: "Hello World",
+        permalink: "hello-world",
+      });
       await repo.save(post);
 
       expect(post.getSlug()).toBe("hello-world");
@@ -117,7 +124,10 @@ describe("SluggableMixin", () => {
   describe("regenerateSlug()", () => {
     it("should regenerate slug from source fields", async () => {
       const repo = dataSource.getRepository(MixinPost);
-      const post = repo.create({ title: "Original Title", permalink: "original-title" });
+      const post = repo.create({
+        title: "Original Title",
+        permalink: "original-title",
+      });
       await repo.save(post);
 
       post.title = "New Title";
@@ -168,7 +178,9 @@ describe("SluggableMixin without service", () => {
     expect(instance).toBeNull();
 
     const post = new MixinPost();
-    expect(() => post.findBySlug("test")).rejects.toThrow(SluggableNotInitializedException);
+    expect(() => post.findBySlug("test")).rejects.toThrow(
+      SluggableNotInitializedException,
+    );
   });
 });
 

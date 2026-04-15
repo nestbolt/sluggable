@@ -110,7 +110,15 @@ describe("SluggableSubscriber", () => {
         TypeOrmModule.forRoot({
           type: "better-sqlite3",
           database: ":memory:",
-          entities: [SubPost, SubUser, SubArticle, SubPage, SubCategory, SubNote, SubPlain],
+          entities: [
+            SubPost,
+            SubUser,
+            SubArticle,
+            SubPage,
+            SubCategory,
+            SubNote,
+            SubPlain,
+          ],
           synchronize: true,
         }),
         SluggableModule.forRoot(),

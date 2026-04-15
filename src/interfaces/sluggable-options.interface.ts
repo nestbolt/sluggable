@@ -18,5 +18,7 @@ export interface SluggableModuleOptions {
 export interface SluggableAsyncOptions {
   imports?: any[];
   inject?: any[];
-  useFactory: (...args: any[]) => Promise<SluggableModuleOptions> | SluggableModuleOptions;
+  useFactory: (
+    ...args: any[]
+  ) => Promise<SluggableModuleOptions> | SluggableModuleOptions;
 }

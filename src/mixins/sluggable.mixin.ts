@@ -23,13 +23,19 @@ function getService(): SluggableService {
 export function SluggableMixin<TBase extends Constructor>(Base: TBase) {
   class SluggableEntityClass extends Base implements SluggableMixinEntity {
     getSlug(): string {
-      const meta = Reflect.getMetadata(SLUGGABLE_METADATA_KEY, this.constructor);
+      const meta = Reflect.getMetadata(
+        SLUGGABLE_METADATA_KEY,
+        this.constructor,
+      );
       const slugField = meta?.slugField ?? "slug";
       return (this as any)[slugField] ?? "";
     }
 
     getSlugField(): string {
-      const meta = Reflect.getMetadata(SLUGGABLE_METADATA_KEY, this.constructor);
+      const meta = Reflect.getMetadata(
+        SLUGGABLE_METADATA_KEY,
+        this.constructor,
+      );
       return meta?.slugField ?? "slug";
     }
 
@@ -41,7 +47,10 @@ export function SluggableMixin<TBase extends Constructor>(Base: TBase) {
 
     async regenerateSlug(): Promise<string> {
       const service = getService();
-      const meta = Reflect.getMetadata(SLUGGABLE_METADATA_KEY, this.constructor);
+      const meta = Reflect.getMetadata(
+        SLUGGABLE_METADATA_KEY,
+        this.constructor,
+      );
       const from: string[] = meta?.from ?? [];
       const slugField = meta?.slugField ?? "slug";
       const newSlug = await service.regenerateSlug(this, from, slugField, {

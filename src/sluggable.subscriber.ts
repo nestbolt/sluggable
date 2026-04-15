@@ -107,7 +107,9 @@ export class SluggableSubscriber implements EntitySubscriberInterface {
 
     let finalSlug = baseSlug;
     if (meta.unique) {
-      const entityId = (event.entity as any).id ? String((event.entity as any).id) : undefined;
+      const entityId = (event.entity as any).id
+        ? String((event.entity as any).id)
+        : undefined;
       finalSlug = await service.generateUniqueSlug(
         event.entity.constructor,
         meta.slugField,
@@ -132,7 +134,9 @@ export class SluggableSubscriber implements EntitySubscriberInterface {
 
   private getMetadata(entity: any): SluggableMetadata | null {
     if (!entity || !entity.constructor) return null;
-    return Reflect.getMetadata(SLUGGABLE_METADATA_KEY, entity.constructor) ?? null;
+    return (
+      Reflect.getMetadata(SLUGGABLE_METADATA_KEY, entity.constructor) ?? null
+    );
   }
 
   private emit(service: SluggableService, event: string, payload: any): void {

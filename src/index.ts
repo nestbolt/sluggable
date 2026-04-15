@@ -2,7 +2,10 @@
 export { SluggableModule } from "./sluggable.module";
 
 // Constants
-export { SLUGGABLE_OPTIONS, SLUGGABLE_METADATA_KEY } from "./sluggable.constants";
+export {
+  SLUGGABLE_OPTIONS,
+  SLUGGABLE_METADATA_KEY,
+} from "./sluggable.constants";
 
 // Service
 export { SluggableService } from "./sluggable.service";
@@ -26,7 +29,10 @@ export type { SlugGeneratedEvent, SlugRegeneratedEvent } from "./events";
 export { SluggableNotInitializedException } from "./exceptions";
 
 // Interfaces
-export type { SluggableModuleOptions, SluggableAsyncOptions } from "./interfaces";
+export type {
+  SluggableModuleOptions,
+  SluggableAsyncOptions,
+} from "./interfaces";
 
 // Utils
 export { slugify } from "./utils";

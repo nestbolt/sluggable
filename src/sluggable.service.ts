@@ -80,6 +80,7 @@ export class SluggableService implements OnModuleInit, OnModuleDestroy {
   }
 
   async generateUniqueSlug(
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     entityConstructor: Function,
     slugField: string,
     baseSlug: string,

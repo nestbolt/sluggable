@@ -17,7 +17,7 @@ export interface SluggableOptions {
 }
 
 export function Sluggable(options: SluggableOptions): ClassDecorator {
-  return (target: Function) => {
+  return (target: object) => {
     Reflect.defineMetadata(
       SLUGGABLE_METADATA_KEY,
       {

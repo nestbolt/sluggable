@@ -51,7 +51,9 @@ describe("slugify()", () => {
   });
 
   it("should handle mixed content", () => {
-    expect(slugify("NestJS + TypeORM = Awesome!")).toBe("nestjs-typeorm-awesome");
+    expect(slugify("NestJS + TypeORM = Awesome!")).toBe(
+      "nestjs-typeorm-awesome",
+    );
   });
 
   it("should handle empty separator", () => {
