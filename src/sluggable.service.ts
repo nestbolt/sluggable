@@ -1,11 +1,17 @@
+import {
+  Inject,
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+  Optional,
+} from "@nestjs/common";
 import "reflect-metadata";
-import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional } from "@nestjs/common";
 import { DataSource } from "typeorm";
+import type { SluggableModuleOptions } from "./interfaces";
 import { SLUGGABLE_OPTIONS } from "./sluggable.constants";
-import { SLUGGABLE_EVENTS } from "./events/sluggable.events";
 import { slugify } from "./utils/slugify";
 import { transliterate as defaultTransliterate } from "./utils/transliterate";
-import type { SluggableModuleOptions } from "./interfaces";
 
 interface EventEmitterLike {
   emit(event: string, ...args: any[]): boolean;
@@ -19,7 +25,9 @@ export class SluggableService implements OnModuleInit, OnModuleDestroy {
   constructor(
     @Inject(SLUGGABLE_OPTIONS) private readonly options: SluggableModuleOptions,
     private readonly dataSource: DataSource,
-    @Optional() @Inject("EventEmitter2") private readonly eventEmitter?: EventEmitterLike,
+    @Optional()
+    @Inject("EventEmitter2")
+    private readonly eventEmitter?: EventEmitterLike,
   ) {}
 
   onModuleInit(): void {
@@ -54,7 +62,8 @@ export class SluggableService implements OnModuleInit, OnModuleDestroy {
       transliterate?: boolean;
     },
   ): string {
-    const shouldTransliterate = overrides?.transliterate ?? this.options.transliterate ?? true;
+    const shouldTransliterate =
+      overrides?.transliterate ?? this.options.transliterate ?? true;
     const separator = overrides?.separator ?? this.options.separator ?? "-";
     const maxLength = overrides?.maxLength ?? this.options.maxLength ?? 255;
     const lowercase = overrides?.lowercase ?? this.options.lowercase ?? true;
@@ -62,7 +71,8 @@ export class SluggableService implements OnModuleInit, OnModuleDestroy {
     let text = input;
 
     if (shouldTransliterate) {
-      const transliterator = this.options.transliterator ?? defaultTransliterate;
+      const transliterator =
+        this.options.transliterator ?? defaultTransliterate;
       text = transliterator(text);
     }
 
@@ -79,7 +89,9 @@ export class SluggableService implements OnModuleInit, OnModuleDestroy {
     const suffixSeparator = this.options.suffixSeparator ?? "-";
 
     // Check if base slug is available
-    const qb = repo.createQueryBuilder("e").where(`e.${slugField} = :slug`, { slug: baseSlug });
+    const qb = repo
+      .createQueryBuilder("e")
+      .where(`e.${slugField} = :slug`, { slug: baseSlug });
 
     if (excludeId) {
       qb.andWhere("e.id != :excludeId", { excludeId });
@@ -101,7 +113,9 @@ export class SluggableService implements OnModuleInit, OnModuleDestroy {
       collisionQb.andWhere("e.id != :excludeId", { excludeId });
     }
 
-    const collisions = await collisionQb.select(`e.${slugField}`, "slug").getRawMany();
+    const collisions = await collisionQb
+      .select(`e.${slugField}`, "slug")
+      .getRawMany();
 
     // Extract existing suffix numbers
     let maxSuffix = 0;
@@ -110,7 +124,7 @@ export class SluggableService implements OnModuleInit, OnModuleDestroy {
     );
 
     for (const row of collisions) {
-      const slug = row.slug ?? row[slugField];
+      const slug = row.slug;
       const match = slug?.match(suffixRegex);
       if (match) {
         const num = parseInt(match[1], 10);
@@ -135,7 +149,12 @@ export class SluggableService implements OnModuleInit, OnModuleDestroy {
     const baseSlug = this.generateSlug(sourceText, overrides);
     const entityId = entity.id ? String(entity.id) : undefined;
 
-    return this.generateUniqueSlug(entity.constructor, slugField, baseSlug, entityId);
+    return this.generateUniqueSlug(
+      entity.constructor,
+      slugField,
+      baseSlug,
+      entityId,
+    );
   }
 
   async findBySlug<T>(
@@ -144,7 +163,9 @@ export class SluggableService implements OnModuleInit, OnModuleDestroy {
     slug: string,
   ): Promise<T | null> {
     const repo = this.dataSource.getRepository(entityConstructor);
-    return repo.findOne({ where: { [slugField]: slug } as any }) as Promise<T | null>;
+    return repo.findOne({
+      where: { [slugField]: slug } as any,
+    }) as Promise<T | null>;
   }
 
   // --- Private ---

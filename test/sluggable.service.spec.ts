@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { Test, TestingModule } from "@nestjs/testing";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Entity, PrimaryGeneratedColumn, Column, DataSource } from "typeorm";
@@ -141,6 +141,181 @@ describe("SluggableService", () => {
 
       const newSlug = await service.regenerateSlug(post, ["title"], "slug");
       expect(newSlug).toBe("updated-title");
+    });
+  });
+
+  describe("generateUniqueSlug() with excludeId and collisions", () => {
+    it("should exclude entity by id when finding collision suffixes", async () => {
+      const repo = dataSource.getRepository(Post);
+      // p1 has slug "test", p2 also has slug "test-1"
+      await repo.save(repo.create({ title: "Test", slug: "test" }));
+      const p2 = await repo.save(repo.create({ title: "Test 2", slug: "test-1" }));
+
+      // Generating unique slug for "test" excluding p2 — "test" exists (not excluded), so collision logic runs
+      // In collision query, p2 is excluded, so only "test" is found (no suffix match), maxSuffix=0
+      const slug = await service.generateUniqueSlug(Post, "slug", "test", p2.id);
+      expect(slug).toBe("test-1");
+    });
+
+    it("should find max suffix when multiple numbered collisions exist", async () => {
+      const repo = dataSource.getRepository(Post);
+      // Insert test-2 before test-1 so the loop processes higher suffix first,
+      // then test-1 hits the `num > maxSuffix` false branch
+      await repo.save(repo.create({ title: "Test", slug: "test" }));
+      await repo.save(repo.create({ title: "Test", slug: "test-2" }));
+      await repo.save(repo.create({ title: "Test", slug: "test-1" }));
+
+      const slug = await service.generateUniqueSlug(Post, "slug", "test");
+      expect(slug).toBe("test-3");
+    });
+
+  });
+
+  describe("generateSlug() with module-level options", () => {
+    let customModule: TestingModule;
+    let customService: SluggableService;
+
+    afterEach(async () => {
+      await customModule?.close();
+    });
+
+    it("should use custom transliterator from options", async () => {
+      customModule = await Test.createTestingModule({
+        imports: [
+          TypeOrmModule.forRoot({
+            type: "better-sqlite3",
+            database: ":memory:",
+            entities: [Post],
+            synchronize: true,
+          }),
+        ],
+        providers: [
+          {
+            provide: SLUGGABLE_OPTIONS,
+            useValue: {
+              transliterator: (input: string) => input.replace(/ö/g, "o"),
+            },
+          },
+          SluggableService,
+        ],
+      }).compile();
+
+      await customModule.init();
+      customService = customModule.get<SluggableService>(SluggableService);
+
+      expect(customService.generateSlug("böök")).toBe("book");
+    });
+
+    it("should disable transliteration when option is false", async () => {
+      customModule = await Test.createTestingModule({
+        imports: [
+          TypeOrmModule.forRoot({
+            type: "better-sqlite3",
+            database: ":memory:",
+            entities: [Post],
+            synchronize: true,
+          }),
+        ],
+        providers: [
+          {
+            provide: SLUGGABLE_OPTIONS,
+            useValue: { transliterate: false },
+          },
+          SluggableService,
+        ],
+      }).compile();
+
+      await customModule.init();
+      customService = customModule.get<SluggableService>(SluggableService);
+
+      // Without transliteration, non-ASCII chars get stripped by slugify
+      expect(customService.generateSlug("café")).toBe("caf");
+    });
+
+    it("should use custom suffixSeparator", async () => {
+      customModule = await Test.createTestingModule({
+        imports: [
+          TypeOrmModule.forRoot({
+            type: "better-sqlite3",
+            database: ":memory:",
+            entities: [Post],
+            synchronize: true,
+          }),
+        ],
+        providers: [
+          {
+            provide: SLUGGABLE_OPTIONS,
+            useValue: { suffixSeparator: "_" },
+          },
+          SluggableService,
+        ],
+      }).compile();
+
+      await customModule.init();
+      customService = customModule.get<SluggableService>(SluggableService);
+
+      const ds = customModule.get<DataSource>(DataSource);
+      const repo = ds.getRepository(Post);
+      await repo.save(repo.create({ title: "Hello", slug: "hello" }));
+
+      const slug = await customService.generateUniqueSlug(Post, "slug", "hello");
+      expect(slug).toBe("hello_1");
+    });
+  });
+
+  describe("static instance lifecycle", () => {
+    it("should clear instance on module destroy", async () => {
+      expect(SluggableService.getInstance()).toBe(service);
+      await module.close();
+      expect(SluggableService.getInstance()).toBeNull();
+      module = undefined as any;
+    });
+  });
+
+  describe("regenerateSlug() without entity id", () => {
+    it("should handle entity without id field", async () => {
+      const entity = { constructor: Post, title: "No Id Entity" };
+      const slug = await service.regenerateSlug(entity, ["title"], "slug");
+      expect(slug).toBe("no-id-entity");
+    });
+  });
+
+  describe("emit with eventEmitter", () => {
+    it("should emit events when eventEmitter is available", async () => {
+      const emitted: { event: string; payload: any }[] = [];
+      const customModule = await Test.createTestingModule({
+        imports: [
+          TypeOrmModule.forRoot({
+            type: "better-sqlite3",
+            database: ":memory:",
+            entities: [Post],
+            synchronize: true,
+          }),
+        ],
+        providers: [
+          { provide: SLUGGABLE_OPTIONS, useValue: {} },
+          {
+            provide: "EventEmitter2",
+            useValue: {
+              emit(event: string, payload: any) {
+                emitted.push({ event, payload });
+                return true;
+              },
+            },
+          },
+          SluggableService,
+        ],
+      }).compile();
+
+      await customModule.init();
+      const svc = customModule.get<SluggableService>(SluggableService);
+
+      // Access private emit via casting
+      (svc as any).emit("test.event", { data: "test" });
+      expect(emitted).toHaveLength(1);
+      expect(emitted[0].event).toBe("test.event");
+
+      await customModule.close();
     });
   });
 });
