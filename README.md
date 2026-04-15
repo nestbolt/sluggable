@@ -17,11 +17,11 @@ This package provides **automatic URL slug generation** for [NestJS](https://nes
 Once installed, using it is as simple as:
 
 ```typescript
-@Sluggable({ from: 'title' })
+@Sluggable({ from: "title" })
 @Entity()
 class Post {
   @Column() title: string;
-  @Column() slug: string;  // Auto-generated: "my-awesome-post"
+  @Column() slug: string; // Auto-generated: "my-awesome-post"
 }
 ```
 
@@ -91,11 +91,13 @@ Optional:
 1. Register the module in your `AppModule`:
 
 ```typescript
-import { SluggableModule } from '@nestbolt/sluggable';
+import { SluggableModule } from "@nestbolt/sluggable";
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({ /* ... */ }),
+    TypeOrmModule.forRoot({
+      /* ... */
+    }),
     SluggableModule.forRoot(),
   ],
 })
@@ -105,27 +107,27 @@ export class AppModule {}
 2. Add the decorator to your entity:
 
 ```typescript
-import { Sluggable } from '@nestbolt/sluggable';
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Sluggable } from "@nestbolt/sluggable";
+import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
 
-@Sluggable({ from: 'title' })
-@Entity('posts')
+@Sluggable({ from: "title" })
+@Entity("posts")
 export class Post {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @Column()
   title: string;
 
   @Column()
-  slug: string;  // Auto-generated on insert
+  slug: string; // Auto-generated on insert
 }
 ```
 
 3. Save an entity and the slug is generated automatically:
 
 ```typescript
-const post = postRepo.create({ title: 'My Awesome Post' });
+const post = postRepo.create({ title: "My Awesome Post" });
 await postRepo.save(post);
 console.log(post.slug); // "my-awesome-post"
 ```
@@ -136,13 +138,13 @@ console.log(post.slug); // "my-awesome-post"
 
 ```typescript
 SluggableModule.forRoot({
-  separator: '-',        // Word separator (default: '-')
-  maxLength: 255,        // Max slug length (default: 255)
-  lowercase: true,       // Lowercase slugs (default: true)
-  transliterate: true,   // Enable transliteration (default: true)
-  onUpdate: 'keep',      // 'keep' or 'regenerate' (default: 'keep')
-  suffixSeparator: '-',  // Collision suffix separator (default: '-')
-})
+  separator: "-", // Word separator (default: '-')
+  maxLength: 255, // Max slug length (default: 255)
+  lowercase: true, // Lowercase slugs (default: true)
+  transliterate: true, // Enable transliteration (default: true)
+  onUpdate: "keep", // 'keep' or 'regenerate' (default: 'keep')
+  suffixSeparator: "-", // Collision suffix separator (default: '-')
+});
 ```
 
 ### Async Configuration (forRootAsync)
@@ -152,10 +154,10 @@ SluggableModule.forRootAsync({
   imports: [ConfigModule],
   inject: [ConfigService],
   useFactory: (config: ConfigService) => ({
-    maxLength: config.get('SLUG_MAX_LENGTH', 100),
-    onUpdate: config.get('SLUG_ON_UPDATE', 'keep'),
+    maxLength: config.get("SLUG_MAX_LENGTH", 100),
+    onUpdate: config.get("SLUG_ON_UPDATE", "keep"),
   }),
-})
+});
 ```
 
 The module is registered as **global** — `SluggableService` is available everywhere without re-importing.
@@ -180,31 +182,33 @@ The `@Sluggable()` class decorator configures slug generation for an entity:
 The `SluggableMixin()` adds instance methods to your entity:
 
 ```typescript
-import { Sluggable, SluggableMixin } from '@nestbolt/sluggable';
-import { BaseEntity } from 'typeorm';
+import { Sluggable, SluggableMixin } from "@nestbolt/sluggable";
+import { BaseEntity } from "typeorm";
 
-@Sluggable({ from: 'title' })
+@Sluggable({ from: "title" })
 @Entity()
-class Post extends SluggableMixin(BaseEntity) { /* ... */ }
+class Post extends SluggableMixin(BaseEntity) {
+  /* ... */
+}
 ```
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `getSlug()` | `string` | Get current slug value |
-| `getSlugField()` | `string` | Get slug column name |
-| `findBySlug(slug)` | `Promise<any \| null>` | Find entity by slug |
-| `regenerateSlug()` | `Promise<string>` | Regenerate and return new slug |
+| Method             | Returns                | Description                    |
+| ------------------ | ---------------------- | ------------------------------ |
+| `getSlug()`        | `string`               | Get current slug value         |
+| `getSlugField()`   | `string`               | Get slug column name           |
+| `findBySlug(slug)` | `Promise<any \| null>` | Find entity by slug            |
+| `regenerateSlug()` | `Promise<string>`      | Regenerate and return new slug |
 
 ## Using the Service Directly
 
 Inject `SluggableService` for programmatic control:
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `generateSlug(input, overrides?)` | `string` | Generate slug from text |
-| `generateUniqueSlug(Entity, field, base, excludeId?)` | `Promise<string>` | Generate unique slug with DB check |
-| `findBySlug<T>(Entity, field, slug)` | `Promise<T \| null>` | Find entity by slug |
-| `regenerateSlug(entity, fields, slugField, overrides?)` | `Promise<string>` | Regenerate for existing entity |
+| Method                                                  | Returns              | Description                        |
+| ------------------------------------------------------- | -------------------- | ---------------------------------- |
+| `generateSlug(input, overrides?)`                       | `string`             | Generate slug from text            |
+| `generateUniqueSlug(Entity, field, base, excludeId?)`   | `Promise<string>`    | Generate unique slug with DB check |
+| `findBySlug<T>(Entity, field, slug)`                    | `Promise<T \| null>` | Find entity by slug                |
+| `regenerateSlug(entity, fields, slugField, overrides?)` | `Promise<string>`    | Regenerate for existing entity     |
 
 ## Collision Handling
 
@@ -224,16 +228,16 @@ Built-in transliteration converts non-Latin characters to ASCII:
 
 ```typescript
 // Arabic
-sluggableService.generateSlug('مرحبا بالعالم');  // "mrhba-balalm"
+sluggableService.generateSlug("مرحبا بالعالم"); // "mrhba-balalm"
 
 // Cyrillic
-sluggableService.generateSlug('Привет мир');     // "privet-mir"
+sluggableService.generateSlug("Привет мир"); // "privet-mir"
 
 // Accented Latin
-sluggableService.generateSlug('Cafe Resume');     // "cafe-resume"
+sluggableService.generateSlug("Cafe Resume"); // "cafe-resume"
 
 // German
-sluggableService.generateSlug('Uber Munchen');    // "ueber-muenchen"
+sluggableService.generateSlug("Uber Munchen"); // "ueber-muenchen"
 ```
 
 ### Custom Transliterator
@@ -243,7 +247,7 @@ Provide your own transliteration function:
 ```typescript
 SluggableModule.forRoot({
   transliterator: (input) => myCustomTransliterate(input),
-})
+});
 ```
 
 ### Using the Utilities Standalone
@@ -251,9 +255,9 @@ SluggableModule.forRoot({
 The `slugify` and `transliterate` functions are exported for standalone use:
 
 ```typescript
-import { slugify, transliterate } from '@nestbolt/sluggable';
+import { slugify, transliterate } from "@nestbolt/sluggable";
 
-const slug = slugify(transliterate('Cafe Resume')); // "cafe-resume"
+const slug = slugify(transliterate("Cafe Resume")); // "cafe-resume"
 ```
 
 ## Update Behavior
@@ -274,12 +278,12 @@ You can set the default behavior at the module level and override per entity.
 Generate slugs from multiple fields:
 
 ```typescript
-@Sluggable({ from: ['firstName', 'lastName'] })
+@Sluggable({ from: ["firstName", "lastName"] })
 @Entity()
 class User {
   @Column() firstName: string;
   @Column() lastName: string;
-  @Column() slug: string;  // "john-doe"
+  @Column() slug: string; // "john-doe"
 }
 ```
 
@@ -287,46 +291,46 @@ class User {
 
 When `@nestjs/event-emitter` is installed, the following events are emitted:
 
-| Event | Payload |
-|-------|---------|
-| `sluggable.slug-generated` | `{ entity, slug, sourceFields, sourceText }` |
+| Event                        | Payload                                      |
+| ---------------------------- | -------------------------------------------- |
+| `sluggable.slug-generated`   | `{ entity, slug, sourceFields, sourceText }` |
 | `sluggable.slug-regenerated` | `{ entity, oldSlug, newSlug, sourceFields }` |
 
 ## Configuration Options
 
 ### Module Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `separator` | `string` | `'-'` | Word separator |
-| `maxLength` | `number` | `255` | Maximum slug length |
-| `lowercase` | `boolean` | `true` | Lowercase slugs |
-| `transliterate` | `boolean` | `true` | Enable transliteration |
-| `transliterator` | `Function` | built-in | Custom transliteration function |
-| `onUpdate` | `'keep' \| 'regenerate'` | `'keep'` | Slug update behavior |
-| `suffixSeparator` | `string` | `'-'` | Collision suffix separator |
+| Option            | Type                     | Default  | Description                     |
+| ----------------- | ------------------------ | -------- | ------------------------------- |
+| `separator`       | `string`                 | `'-'`    | Word separator                  |
+| `maxLength`       | `number`                 | `255`    | Maximum slug length             |
+| `lowercase`       | `boolean`                | `true`   | Lowercase slugs                 |
+| `transliterate`   | `boolean`                | `true`   | Enable transliteration          |
+| `transliterator`  | `Function`               | built-in | Custom transliteration function |
+| `onUpdate`        | `'keep' \| 'regenerate'` | `'keep'` | Slug update behavior            |
+| `suffixSeparator` | `string`                 | `'-'`    | Collision suffix separator      |
 
 ### Decorator Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `from` | `string \| string[]` | *required* | Source field(s) |
-| `slugField` | `string` | `'slug'` | Target field |
-| `separator` | `string` | module default | Word separator override |
-| `maxLength` | `number` | module default | Max length override |
-| `onUpdate` | `'keep' \| 'regenerate'` | module default | Update behavior override |
-| `unique` | `boolean` | `true` | Enable collision handling |
+| Option      | Type                     | Default        | Description               |
+| ----------- | ------------------------ | -------------- | ------------------------- |
+| `from`      | `string \| string[]`     | _required_     | Source field(s)           |
+| `slugField` | `string`                 | `'slug'`       | Target field              |
+| `separator` | `string`                 | module default | Word separator override   |
+| `maxLength` | `number`                 | module default | Max length override       |
+| `onUpdate`  | `'keep' \| 'regenerate'` | module default | Update behavior override  |
+| `unique`    | `boolean`                | `true`         | Enable collision handling |
 
 ## Standalone Usage
 
 Use `slugify` and `transliterate` without the NestJS module:
 
 ```typescript
-import { slugify, transliterate } from '@nestbolt/sluggable';
+import { slugify, transliterate } from "@nestbolt/sluggable";
 
-const slug = slugify('Hello World!');                  // "hello-world"
-const slug2 = slugify('Hello', { separator: '_' });    // "hello"
-const latin = transliterate('Привет');                 // "Privet"
+const slug = slugify("Hello World!"); // "hello-world"
+const slug2 = slugify("Hello", { separator: "_" }); // "hello"
+const latin = transliterate("Привет"); // "Privet"
 ```
 
 ## Testing
@@ -358,10 +362,6 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 ## Security
 
 If you discover any security-related issues, please report them via [GitHub Issues](https://github.com/nestbolt/sluggable/issues) with the **security** label instead of using the public issue tracker.
-
-## Credits
-
-- Inspired by [spatie/laravel-sluggable](https://github.com/spatie/laravel-sluggable)
 
 ## License
 

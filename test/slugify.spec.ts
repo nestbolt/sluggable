@@ -53,4 +53,27 @@ describe("slugify()", () => {
   it("should handle mixed content", () => {
     expect(slugify("NestJS + TypeORM = Awesome!")).toBe("nestjs-typeorm-awesome");
   });
+
+  it("should handle empty separator", () => {
+    const result = slugify("Hello World", { separator: "" });
+    expect(result).toBe("helloworld");
+  });
+
+  it("should truncate without trailing separator when separator is empty", () => {
+    const result = slugify("Hello World Test", { separator: "", maxLength: 5 });
+    expect(result).toBe("hello");
+  });
+
+  it("should truncate long slug at word boundary", () => {
+    // "this-is-a-test" is 14 chars, maxLength 12 should cut to "this-is-a" (at last separator before 12)
+    const result = slugify("this is a test", { maxLength: 12 });
+    expect(result.length).toBeLessThanOrEqual(12);
+    expect(result).not.toMatch(/-$/);
+  });
+
+  it("should truncate single long word without separator available", () => {
+    // "abcdefghijklmnop" has no separator, so just substring
+    const result = slugify("abcdefghijklmnop", { maxLength: 5 });
+    expect(result).toBe("abcde");
+  });
 });
